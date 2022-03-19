@@ -1,7 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { UserEntity } from '../entities/user.entity';
 import { CommentEntity } from '../entities/comment.entity';
 import { PostEntity } from '../entities/post.entity';
 
@@ -18,7 +17,7 @@ export class TypeOrmConfigService {
       database: this.config.get('database.name'),
       username: this.config.get('database.username'),
       password: this.config.get('database.password'),
-      entities: [UserEntity, CommentEntity, PostEntity],
+      entities: [CommentEntity, PostEntity],
       synchronize: true,
     };
   }
