@@ -7,6 +7,9 @@ import {
   CognitoUserPool,
 } from 'amazon-cognito-identity-js';
 import { AuthCredentialsDto, AuthRegisterDto } from '../../interfaces/auth';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UsersEntity } from '../../entities/users.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +17,8 @@ export class AuthService {
   constructor(
     @Inject(forwardRef(() => AuthConfig))
     private readonly authConfig: AuthConfig,
+    @InjectRepository(UsersEntity)
+    private usersRepository: Repository<UsersEntity>,
   ) {
     this.userPool = new CognitoUserPool({
       UserPoolId: this.authConfig.userPoolId,
@@ -22,10 +27,10 @@ export class AuthService {
   }
 
   async register(authRegisterRequest: AuthRegisterDto) {
-    const { name, email, password } = authRegisterRequest;
+    const { username, email, password, gender } = authRegisterRequest;
     return new Promise((resolve, reject) => {
       return this.userPool.signUp(
-        name,
+        username,
         password,
         [new CognitoUserAttribute({ Name: 'email', Value: email })],
         null,
@@ -33,7 +38,17 @@ export class AuthService {
           if (!result) {
             reject(err);
           } else {
-            resolve(result.user);
+            this.usersRepository.save({
+              username: username,
+              gender: gender,
+              email: email,
+              created_at: new Date(),
+              updated_at: new Date(),
+            });
+            resolve({
+              response: result.user,
+              info: 'You need to verify your email! Check the email for code.',
+            });
           }
         },
       );
